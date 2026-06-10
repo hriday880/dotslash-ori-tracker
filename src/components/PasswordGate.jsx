@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import { supabase } from '../supabaseClient';
+
 export default function PasswordGate({ children }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -10,28 +12,53 @@ export default function PasswordGate({ children }) {
     sessionStorage.getItem('authenticated') === 'true'
   );
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const correctPassword = "LetMeInBITCH";
     
     setIsChecking(true);
     setError(false);
     
-    setTimeout(() => {
-      if (password === correctPassword && username.trim() !== '') {
+    if (password === correctPassword && username.trim() !== '') {
+      try {
         const normalizedUser = username.trim().toLowerCase();
+        const actualUsername = username.trim();
+
+        // Check if member exists in DB (case-insensitive)
+        const { data: existingMembers, error: fetchError } = await supabase
+          .from('members')
+          .select('id, name')
+          .ilike('name', actualUsername);
+
+        if (fetchError) throw fetchError;
+
+        // If member doesn't exist, insert them
+        if (!existingMembers || existingMembers.length === 0) {
+          const { error: insertError } = await supabase
+            .from('members')
+            .insert([{ name: actualUsername, role: 'both' }]);
+          
+          if (insertError) throw insertError;
+        }
+
         sessionStorage.setItem('authenticated', 'true');
-        sessionStorage.setItem('username', username.trim());
+        sessionStorage.setItem('username', actualUsername);
         sessionStorage.setItem('role', normalizedUser === 'hriday' ? 'admin' : 'member');
         setIsAuthenticated(true);
-      } else {
+      } catch (err) {
+        console.error("Error logging in / creating member:", err);
         setError(true);
         setPassword('');
         setIsShaking(true);
         setTimeout(() => setIsShaking(false), 300);
       }
-      setIsChecking(false);
-    }, 600);
+    } else {
+      setError(true);
+      setPassword('');
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 300);
+    }
+    setIsChecking(false);
   };
 
   if (isAuthenticated) {
