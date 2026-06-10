@@ -164,7 +164,6 @@ export default function Members() {
                           {member.role}
                         </span>
                       </div>
-                      </div>
                     </div>
                     {isAdmin && (
                       <button 
