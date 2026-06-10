@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 export default function PasswordGate({ children }) {
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
@@ -11,14 +12,16 @@ export default function PasswordGate({ children }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const correctPassword = import.meta.env.VITE_APP_PASSWORD || "change_me_in_env";
+    const correctPassword = "LetMeInBITCH";
+    const correctUsername = "hriday";
     
     setIsChecking(true);
     setError(false);
     
     setTimeout(() => {
-      if (password === correctPassword) {
+      if (password === correctPassword && username.toLowerCase() === correctUsername) {
         sessionStorage.setItem('authenticated', 'true');
+        sessionStorage.setItem('username', username);
         setIsAuthenticated(true);
       } else {
         setError(true);
@@ -60,6 +63,28 @@ export default function PasswordGate({ children }) {
         {/* Form */}
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div>
+            <label className="block font-label-md text-label-md text-on-surface-variant mb-2" htmlFor="username">
+              ADMIN USERNAME
+            </label>
+            <div className="relative group mb-4">
+              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant transition-colors group-focus-within:text-primary">
+                person
+              </span>
+              <input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  setError(false);
+                }}
+                className={`w-full bg-[#0f0f0f] border text-on-surface px-12 py-3 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-on-surface-variant/30 font-body-md text-body-md ${
+                  error ? 'border-error' : 'border-outline-variant/50'
+                }`}
+                placeholder="Enter username"
+              />
+            </div>
+
             <label className="block font-label-md text-label-md text-on-surface-variant mb-2" htmlFor="password">
               ACCESS KEY
             </label>
@@ -86,18 +111,21 @@ export default function PasswordGate({ children }) {
             {error && (
               <div className="mt-3 flex items-center gap-2 text-error animate-pulse">
                 <span className="material-symbols-outlined text-[16px]">error</span>
-                <p className="font-body-sm text-body-sm">Incorrect password</p>
+                <p className="font-body-sm text-body-sm">Incorrect username or password</p>
               </div>
             )}
           </div>
           
           <button
             type="submit"
-            className="w-full bg-[#6366f1] hover:bg-[#4f46e5] text-white py-3 rounded-lg font-label-md text-label-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-primary-container/10"
+            disabled={isChecking}
+            className="w-full bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-50 text-white py-3 rounded-lg font-label-md text-label-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-primary-container/10"
           >
-            ENTER
-            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+            {isChecking ? 'VERIFYING...' : 'ENTER'}
+            {!isChecking && <span className="material-symbols-outlined text-[18px]">arrow_forward</span>}
           </button>
         </form>
+      </div>
+    </main>
   );
 }
