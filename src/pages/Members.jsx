@@ -18,6 +18,7 @@ export default function Members() {
   const [editingMember, setEditingMember] = useState(null);
   const [viewingProfile, setViewingProfile] = useState(null);
   const [payingMember, setPayingMember] = useState(null);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
 
   const isAdmin = sessionStorage.getItem('role') === 'admin';
 
@@ -117,12 +118,14 @@ export default function Members() {
     let pendingAmount = 0;
 
     memberPayouts.forEach(p => {
+      // Add to total earned regardless of paid status
+      if (p.payout_type === 'outreach_cut') outreachEarned += Number(p.amount);
+      if (p.payout_type === 'dev_cut') devEarned += Number(p.amount);
+      if (p.payout_type === 'transport') transportReimbursed += Number(p.amount);
+      
+      // Track pending amount separately
       if (!p.paid) {
         pendingAmount += Number(p.amount);
-      } else {
-        if (p.payout_type === 'outreach_cut') outreachEarned += Number(p.amount);
-        if (p.payout_type === 'dev_cut') devEarned += Number(p.amount);
-        if (p.payout_type === 'transport') transportReimbursed += Number(p.amount);
       }
     });
 

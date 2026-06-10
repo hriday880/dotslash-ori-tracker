@@ -49,12 +49,14 @@ export default function PasswordGate({ children }) {
         console.error("Error logging in / creating member:", err);
         setError(true);
         setPassword('');
+        setIsChecking(false);
         setIsShaking(true);
         setTimeout(() => setIsShaking(false), 300);
       }
     } else {
       setError(true);
       setPassword('');
+      setIsChecking(false);
       setIsShaking(true);
       setTimeout(() => setIsShaking(false), 300);
     }
