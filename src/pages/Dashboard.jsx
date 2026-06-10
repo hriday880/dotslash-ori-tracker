@@ -141,123 +141,179 @@ export default function Dashboard() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-indigo-500" /></div>;
+    return (
+      <div className="flex-1 flex items-center justify-center h-full">
+        <span className="material-symbols-outlined text-primary text-[48px] animate-spin">sync</span>
+      </div>
+    );
   }
 
-  const StatCard = ({ title, value, icon: Icon, colorClass }) => (
-    <div className="bg-[var(--color-dark-surface)] border border-[var(--color-dark-border)] rounded-xl p-6 shadow-sm flex items-center gap-4">
-      <div className={`p-4 rounded-lg ${colorClass}`}>
-        <Icon className="w-6 h-6" />
-      </div>
-      <div>
-        <p className="text-sm font-medium text-gray-400">{title}</p>
-        <p className="text-2xl font-bold text-white mt-1">{value}</p>
-      </div>
-    </div>
-  );
-
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">Dashboard</h1>
-        <p className="text-gray-400 mt-1">Overview of club financials and projects.</p>
-      </div>
+    <div className="flex-1 overflow-y-auto custom-scrollbar relative">
+      {/* Top Navbar Cluster */}
+      <header className="flex justify-between items-center w-full px-[var(--spacing-margin-page)] py-[var(--spacing-stack-md)] sticky top-0 bg-background/80 backdrop-blur-md z-40 border-b border-outline-variant/30">
+        <div>
+          <h2 className="font-headline-md text-headline-md font-bold text-primary">Operational Dashboard</h2>
+          <p className="text-body-sm text-on-surface-variant">Real-time status of ORI internal operations</p>
+        </div>
+      </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard 
-          title="Club Fund Balance" 
-          value={formatCurrency(data.fundBalance)} 
-          icon={Wallet} 
-          colorClass="bg-emerald-500/10 text-emerald-400" 
-        />
-        <StatCard 
-          title="Pending Payouts" 
-          value={formatCurrency(data.pendingPayoutsTotal)} 
-          icon={Clock} 
-          colorClass="bg-amber-500/10 text-amber-400" 
-        />
-        <StatCard 
-          title="Active Projects" 
-          value={data.activeProjectsCount} 
-          icon={Activity} 
-          colorClass="bg-indigo-500/10 text-indigo-400" 
-        />
-        <StatCard 
-          title="Revenue This Month" 
-          value={formatCurrency(data.revenueThisMonth)} 
-          icon={TrendingUp} 
-          colorClass="bg-blue-500/10 text-blue-400" 
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Recent Projects */}
-        <div className="bg-[var(--color-dark-surface)] border border-[var(--color-dark-border)] rounded-xl shadow-sm overflow-hidden flex flex-col">
-          <div className="p-6 border-b border-[var(--color-dark-border)] flex justify-between items-center">
-            <h2 className="text-lg font-bold text-white">Recent Projects</h2>
-            <Link to="/projects" className="text-sm text-indigo-400 hover:text-indigo-300 font-medium">View All</Link>
+      <div className="p-[var(--spacing-margin-page)] space-y-8 max-w-[var(--spacing-container-max)] mx-auto">
+        {/* Metrics Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[var(--spacing-gutter)]">
+          {/* Club Fund Balance */}
+          <div className="card-tier-1 p-[var(--spacing-stack-md)] rounded-xl flex flex-col justify-between h-32">
+            <div className="flex justify-between items-start">
+              <span className="text-label-md text-on-surface-variant uppercase tracking-wider">Club Fund Balance</span>
+              <span className="material-symbols-outlined text-secondary">account_balance</span>
+            </div>
+            <div>
+              <p className="font-stat-lg text-stat-lg text-secondary">{formatCurrency(data.fundBalance)}</p>
+              <p className="text-body-sm text-secondary/70 flex items-center gap-1">
+                <span className="material-symbols-outlined text-xs">trending_up</span>
+                Total Balance
+              </p>
+            </div>
           </div>
-          <div className="divide-y divide-[var(--color-dark-border)] flex-1 overflow-auto">
-            {data.recentProjects.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">No projects yet.</div>
-            ) : (
-              data.recentProjects.map(project => (
-                <div key={project.id} className="p-4 hover:bg-[#2a2a2a] transition-colors flex justify-between items-center">
-                  <div>
-                    <Link to={`/projects/${project.id}`} className="font-semibold text-white hover:text-indigo-400 transition-colors">
-                      {project.client_name}
-                    </Link>
-                    <p className="text-sm text-gray-400 mt-1">Outreach: {project.outreachNames}</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-medium text-white mb-2">{formatCurrency(project.deal_value)}</div>
-                    <span className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(project.status)}`}>
-                      {project.status.replace('_', ' ').toUpperCase()}
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
+
+          {/* Pending Payouts */}
+          <div className="card-tier-1 p-[var(--spacing-stack-md)] rounded-xl flex flex-col justify-between h-32">
+            <div className="flex justify-between items-start">
+              <span className="text-label-md text-on-surface-variant uppercase tracking-wider">Pending Payouts</span>
+              <span className="material-symbols-outlined text-tertiary">payments</span>
+            </div>
+            <div>
+              <p className="font-stat-lg text-stat-lg text-tertiary">{formatCurrency(data.pendingPayoutsTotal)}</p>
+              <p className="text-body-sm text-on-surface-variant">{data.pendingPayoutsGrouped.length} members awaiting</p>
+            </div>
+          </div>
+
+          {/* Active Projects */}
+          <div className="card-tier-1 p-[var(--spacing-stack-md)] rounded-xl flex flex-col justify-between h-32">
+            <div className="flex justify-between items-start">
+              <span className="text-label-md text-on-surface-variant uppercase tracking-wider">Active Projects</span>
+              <span className="material-symbols-outlined text-primary">rocket_launch</span>
+            </div>
+            <div>
+              <p className="font-stat-lg text-stat-lg text-on-surface">{data.activeProjectsCount}</p>
+              <p className="text-body-sm text-on-surface-variant">In progress</p>
+            </div>
+          </div>
+
+          {/* Revenue This Month */}
+          <div className="card-tier-1 p-[var(--spacing-stack-md)] rounded-xl flex flex-col justify-between h-32">
+            <div className="flex justify-between items-start">
+              <span className="text-label-md text-on-surface-variant uppercase tracking-wider">Revenue Monthly</span>
+              <span className="material-symbols-outlined text-secondary">insights</span>
+            </div>
+            <div>
+              <p className="font-stat-lg text-stat-lg text-secondary">{formatCurrency(data.revenueThisMonth)}</p>
+              <p className="text-body-sm text-secondary/70 flex items-center gap-1">
+                <span className="material-symbols-outlined text-xs">check_circle</span>
+                Current Month
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Pending Payouts */}
-        <div className="bg-[var(--color-dark-surface)] border border-[var(--color-dark-border)] rounded-xl shadow-sm overflow-hidden flex flex-col">
-          <div className="p-6 border-b border-[var(--color-dark-border)]">
-            <h2 className="text-lg font-bold text-white">Pending Payouts</h2>
-          </div>
-          <div className="divide-y divide-[var(--color-dark-border)] flex-1 overflow-auto">
-            {data.pendingPayoutsGrouped.length === 0 ? (
-              <div className="p-8 text-center text-gray-500 flex flex-col items-center gap-3">
-                <CheckCircle className="w-10 h-10 text-emerald-500 opacity-50" />
-                <p>All members are paid up!</p>
-              </div>
-            ) : (
-              data.pendingPayoutsGrouped.map(group => (
-                <div key={group.memberId} className="p-6 flex justify-between items-center">
-                  <div>
-                    <p className="font-semibold text-white text-lg">{group.memberName}</p>
-                    <p className="text-sm text-gray-400 mt-1">{group.count} pending item{group.count !== 1 && 's'}</p>
-                  </div>
-                  <div className="flex items-center gap-6">
-                    <span className="font-bold text-amber-500 text-xl">{formatCurrency(group.total)}</span>
+        {/* Dashboard Split View */}
+        <div className="grid grid-cols-12 gap-[var(--spacing-gutter)]">
+          {/* Left: Recent Projects (8 cols) */}
+          <section className="col-span-12 lg:col-span-8 card-tier-1 rounded-xl overflow-hidden flex flex-col max-h-[500px]">
+            <div className="px-[var(--spacing-margin-page)] py-[var(--spacing-stack-md)] border-b border-outline-variant flex justify-between items-center bg-surface-container-low shrink-0">
+              <h3 className="font-headline-sm text-headline-sm text-on-surface">Recent Projects</h3>
+              <Link to="/projects" className="text-primary text-label-md hover:underline">View All</Link>
+            </div>
+            <div className="overflow-x-auto overflow-y-auto custom-scrollbar flex-1">
+              <table className="w-full text-left border-collapse">
+                <thead className="sticky top-0 bg-surface-container-high z-10">
+                  <tr className="text-on-surface-variant uppercase">
+                    <th className="p-[var(--spacing-table-cell-padding)] font-label-md">Client Name</th>
+                    <th className="p-[var(--spacing-table-cell-padding)] font-label-md">Value</th>
+                    <th className="p-[var(--spacing-table-cell-padding)] font-label-md text-center">Status</th>
+                    <th className="p-[var(--spacing-table-cell-padding)] font-label-md">Outreach</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-outline-variant/30">
+                  {data.recentProjects.length === 0 ? (
+                    <tr>
+                      <td colSpan="4" className="p-8 text-center text-on-surface-variant">No projects yet.</td>
+                    </tr>
+                  ) : (
+                    data.recentProjects.map(project => (
+                      <tr key={project.id} className="hover:bg-surface-container transition-colors group">
+                        <td className="p-[var(--spacing-table-cell-padding)] font-body-md text-on-surface">
+                          <Link to={`/projects/${project.id}`} className="font-semibold text-white hover:text-primary transition-colors">
+                            {project.client_name}
+                          </Link>
+                        </td>
+                        <td className="p-[var(--spacing-table-cell-padding)] font-body-md text-on-surface font-semibold">
+                          {formatCurrency(project.deal_value)}
+                        </td>
+                        <td className="p-[var(--spacing-table-cell-padding)] text-center">
+                          <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            project.status === 'completed' || project.status === 'delivered' ? 'bg-secondary-container/10 text-secondary' :
+                            project.status === 'in_dev' ? 'bg-primary-container/10 text-primary' :
+                            'bg-tertiary-container/10 text-tertiary'
+                          }`}>
+                            {project.status.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="p-[var(--spacing-table-cell-padding)] text-on-surface-variant font-body-sm">
+                          {project.outreachNames}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* Right: Pending Payouts (4 cols) */}
+          <section className="col-span-12 lg:col-span-4 card-tier-1 rounded-xl overflow-hidden flex flex-col max-h-[500px]">
+            <div className="px-[var(--spacing-margin-page)] py-[var(--spacing-stack-md)] border-b border-outline-variant bg-surface-container-low shrink-0">
+              <h3 className="font-headline-sm text-headline-sm text-on-surface">Pending Payouts</h3>
+            </div>
+            <div className="p-[var(--spacing-gutter)] flex-1 overflow-y-auto custom-scrollbar space-y-4">
+              {data.pendingPayoutsGrouped.length === 0 ? (
+                <div className="p-8 text-center text-on-surface-variant flex flex-col items-center gap-3">
+                  <span className="material-symbols-outlined text-[48px] text-secondary opacity-50">check_circle</span>
+                  <p>All members are paid up!</p>
+                </div>
+              ) : (
+                data.pendingPayoutsGrouped.map(group => (
+                  <div key={group.memberId} className="flex items-center justify-between p-[var(--spacing-stack-md)] bg-surface-container-high rounded-lg group">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-outline-variant/20 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-on-surface-variant">person</span>
+                      </div>
+                      <div>
+                        <p className="font-body-md text-on-surface font-bold truncate max-w-[100px]">{group.memberName}</p>
+                        <p className="text-label-sm text-tertiary">{formatCurrency(group.total)}</p>
+                      </div>
+                    </div>
                     <button
                       onClick={() => handleMarkPaid(group.memberId)}
                       disabled={payingMemberId === group.memberId}
-                      className="bg-emerald-600/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-600/20 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center gap-2"
+                      className="bg-primary hover:bg-primary-container text-on-primary font-label-md px-3 py-1.5 rounded-lg active:scale-95 transition-transform disabled:opacity-50 flex items-center gap-1"
                     >
                       {payingMemberId === group.memberId ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span className="material-symbols-outlined animate-spin text-[16px]">sync</span>
                       ) : (
-                        <CheckCircle className="w-4 h-4" />
+                        "Mark Paid"
                       )}
-                      Mark Paid
                     </button>
                   </div>
-                </div>
-              ))
-            )}
-          </div>
+                ))
+              )}
+              
+              <div className="mt-6 p-[var(--spacing-stack-md)] rounded-xl bg-primary/10 border border-primary/20 flex gap-4 items-center">
+                <span className="material-symbols-outlined text-primary">info</span>
+                <p className="text-body-sm text-primary">Make sure to verify deal completions before marking members as paid.</p>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
     </div>

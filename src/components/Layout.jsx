@@ -15,51 +15,59 @@ export default function Layout() {
   ];
 
   return (
-    <div className="min-h-screen flex bg-[var(--color-dark-bg)] text-gray-100">
+    <div className="flex overflow-hidden h-screen bg-background text-on-background">
       {/* Sidebar */}
-      <aside className="w-64 bg-[var(--color-dark-surface)] border-r border-[var(--color-dark-border)] flex flex-col fixed h-full z-10">
-        <div className="p-6 border-b border-[var(--color-dark-border)]">
-          <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
-            <span className="bg-[var(--color-accent-indigo)] w-8 h-8 rounded-lg flex items-center justify-center text-sm font-black">/</span>
-            ORI Tracker
-          </h1>
+      <aside className="h-screen w-64 fixed left-0 top-0 flex flex-col py-[var(--spacing-stack-md)] bg-surface border-r border-outline-variant z-50">
+        <div className="px-6 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center overflow-hidden shadow-md">
+              <img src="/logo.jpg" alt="DotSlash Logo" className="w-full h-full object-cover" />
+            </div>
+            <div>
+              <h1 className="text-headline-sm font-bold text-on-surface">DotSlash ORI</h1>
+              <p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Internal Project Tracker</p>
+            </div>
+          </div>
         </div>
         
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 px-3 space-y-1">
           {navItems.map((item) => (
             <NavLink
               key={item.name}
               to={item.path}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
+                `flex items-center gap-3 px-3 py-2 rounded-lg group transition-colors ${
                   isActive
-                    ? 'bg-indigo-600/10 text-indigo-400'
-                    : 'text-gray-400 hover:bg-[#2a2a2a] hover:text-white'
+                    ? 'text-primary font-bold border-r-2 border-primary bg-surface-container-high rounded-r-none'
+                    : 'text-on-surface-variant hover:bg-surface-container'
                 }`
               }
             >
               <item.icon className="w-5 h-5" />
-              {item.name}
+              <span className="font-body-md text-body-md">{item.name}</span>
             </NavLink>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-[var(--color-dark-border)]">
+        <div className="px-6 mt-auto">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 w-full rounded-lg font-medium text-gray-400 hover:bg-[#2a2a2a] hover:text-red-400 transition-colors"
+            className="w-full p-3 bg-surface-container hover:bg-surface-container-high rounded-lg flex items-center gap-3 border border-outline-variant transition-colors text-left"
           >
-            <LogOut className="w-5 h-5" />
-            Lock Session
+            <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant">
+              <LogOut className="w-4 h-4" />
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <p className="text-body-sm font-bold truncate">Lock Session</p>
+              <p className="text-label-sm text-error truncate">Logout</p>
+            </div>
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 ml-64 min-h-screen">
-        <div className="p-8 max-w-7xl mx-auto">
-          <Outlet />
-        </div>
+      {/* Main Content Area */}
+      <main className="ml-64 flex-1 flex flex-col h-screen overflow-hidden">
+        <Outlet />
       </main>
     </div>
   );
