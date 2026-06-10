@@ -13,15 +13,16 @@ export default function PasswordGate({ children }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     const correctPassword = "LetMeInBITCH";
-    const correctUsername = "hriday";
     
     setIsChecking(true);
     setError(false);
     
     setTimeout(() => {
-      if (password === correctPassword && username.toLowerCase() === correctUsername) {
+      if (password === correctPassword && username.trim() !== '') {
+        const normalizedUser = username.trim().toLowerCase();
         sessionStorage.setItem('authenticated', 'true');
-        sessionStorage.setItem('username', username);
+        sessionStorage.setItem('username', username.trim());
+        sessionStorage.setItem('role', normalizedUser === 'hriday' ? 'admin' : 'member');
         setIsAuthenticated(true);
       } else {
         setError(true);
@@ -64,7 +65,7 @@ export default function PasswordGate({ children }) {
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div>
             <label className="block font-label-md text-label-md text-on-surface-variant mb-2" htmlFor="username">
-              ADMIN USERNAME
+              USERNAME
             </label>
             <div className="relative group mb-4">
               <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant transition-colors group-focus-within:text-primary">
