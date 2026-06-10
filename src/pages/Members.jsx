@@ -14,6 +14,8 @@ export default function Members() {
   const [role, setRole] = useState('outreach');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const isAdmin = sessionStorage.getItem('role') === 'admin';
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -106,13 +108,15 @@ export default function Members() {
               type="text"
             />
           </div>
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="bg-primary text-on-primary font-bold px-6 py-2.5 rounded-lg text-label-md hover:opacity-90 transition-all flex items-center active:scale-95 tracking-wider uppercase"
-          >
-            <span className="material-symbols-outlined mr-2 text-[18px]">person_add</span>
-            Add Member
-          </button>
+          {isAdmin && (
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="bg-primary text-on-primary font-bold px-6 py-2.5 rounded-lg text-label-md hover:opacity-90 transition-all flex items-center active:scale-95 tracking-wider uppercase"
+            >
+              <span className="material-symbols-outlined mr-2 text-[18px]">person_add</span>
+              Add Member
+            </button>
+          )}
         </div>
       </header>
 
@@ -160,10 +164,16 @@ export default function Members() {
                           {member.role}
                         </span>
                       </div>
+                      </div>
                     </div>
-                    <button className="text-on-surface-variant hover:text-on-surface transition-colors">
-                      <span className="material-symbols-outlined text-[20px]">more_horiz</span>
-                    </button>
+                    {isAdmin && (
+                      <button 
+                        className="text-on-surface-variant hover:text-on-surface transition-colors"
+                        onClick={() => alert("Edit member coming soon")}
+                      >
+                        <span className="material-symbols-outlined text-[20px]">more_horiz</span>
+                      </button>
+                    )}
                   </div>
                   
                   <div className="space-y-3 mt-6">
@@ -188,16 +198,26 @@ export default function Members() {
                   </div>
                   
                   <div className="mt-5 flex gap-2">
-                    <button className="flex-1 py-2 bg-surface-container-high text-label-sm font-bold rounded hover:bg-surface-variant transition-colors uppercase tracking-wider text-on-surface">View Profile</button>
-                    <button className="px-3 py-2 bg-surface-container-high text-primary rounded hover:bg-primary/10 transition-colors">
-                      <span className="material-symbols-outlined text-[18px]">payments</span>
+                    <button 
+                      className="flex-1 py-2 bg-surface-container-high text-label-sm font-bold rounded hover:bg-surface-variant transition-colors uppercase tracking-wider text-on-surface"
+                      onClick={() => alert("Profile view coming soon")}
+                    >
+                      View Profile
                     </button>
+                    {isAdmin && (
+                      <button 
+                        className="px-3 py-2 bg-surface-container-high text-primary rounded hover:bg-primary/10 transition-colors"
+                        onClick={() => alert("Payment feature coming soon")}
+                      >
+                        <span className="material-symbols-outlined text-[18px]">payments</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               );
             })}
 
-            {members.length === 0 && (
+            {members.length === 0 && isAdmin && (
               <div className="col-span-full border-2 border-dashed border-outline-variant p-10 rounded-xl flex flex-col items-center justify-center text-on-surface-variant hover:border-primary hover:text-primary transition-all cursor-pointer bg-surface-container-lowest/50 group" onClick={() => setIsModalOpen(true)}>
                 <div className="w-12 h-12 rounded-full border-2 border-dashed border-outline-variant group-hover:border-primary flex items-center justify-center mb-3 transition-colors">
                   <span className="material-symbols-outlined">add</span>
