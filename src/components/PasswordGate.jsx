@@ -5,7 +5,7 @@ import { supabase } from '../supabaseClient';
 export default function PasswordGate({ children }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const [isShaking, setIsShaking] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -17,9 +17,9 @@ export default function PasswordGate({ children }) {
     const correctPassword = "LetMeInBITCH";
     
     setIsChecking(true);
-    setError(false);
+    setErrorMsg('');
     
-    if (password === correctPassword && username.trim() !== '') {
+    if (password.trim() === correctPassword && username.trim() !== '') {
       try {
         const normalizedUser = username.trim().toLowerCase();
         const actualUsername = username.trim();
@@ -47,14 +47,14 @@ export default function PasswordGate({ children }) {
         setIsAuthenticated(true);
       } catch (err) {
         console.error("Error logging in / creating member:", err);
-        setError(true);
+        setErrorMsg('Database Error: ' + (err.message || 'Check your internet connection or Vercel ENV variables.'));
         setPassword('');
         setIsChecking(false);
         setIsShaking(true);
         setTimeout(() => setIsShaking(false), 300);
       }
     } else {
-      setError(true);
+      setErrorMsg('Incorrect username or password');
       setPassword('');
       setIsChecking(false);
       setIsShaking(true);
@@ -96,7 +96,7 @@ export default function PasswordGate({ children }) {
             <label className="block font-label-md text-label-md text-on-surface-variant mb-2" htmlFor="username">
               USERNAME
             </label>
-            <div className="relative group mb-4">
+            <div className="relative group">
               <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant transition-colors group-focus-within:text-primary">
                 person
               </span>
@@ -106,10 +106,10 @@ export default function PasswordGate({ children }) {
                 value={username}
                 onChange={(e) => {
                   setUsername(e.target.value);
-                  setError(false);
+                  setErrorMsg('');
                 }}
                 className={`w-full bg-[#0f0f0f] border text-on-surface px-12 py-3 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-on-surface-variant/30 font-body-md text-body-md ${
-                  error ? 'border-error' : 'border-outline-variant/50'
+                  errorMsg ? 'border-error' : 'border-outline-variant/50'
                 }`}
                 placeholder="Enter username"
               />
@@ -128,20 +128,20 @@ export default function PasswordGate({ children }) {
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
-                  setError(false);
+                  setErrorMsg('');
                 }}
                 className={`w-full bg-[#0f0f0f] border text-on-surface px-12 py-3 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-on-surface-variant/30 font-body-md text-body-md ${
-                  error ? 'border-error' : 'border-outline-variant/50'
+                  errorMsg ? 'border-error' : 'border-outline-variant/50'
                 }`}
                 placeholder="Enter password"
               />
             </div>
             
             {/* Error Message */}
-            {error && (
+            {errorMsg && (
               <div className="mt-3 flex items-center gap-2 text-error animate-pulse">
                 <span className="material-symbols-outlined text-[16px]">error</span>
-                <p className="font-body-sm text-body-sm">Incorrect username or password</p>
+                <p className="font-body-sm text-body-sm">{errorMsg}</p>
               </div>
             )}
           </div>
