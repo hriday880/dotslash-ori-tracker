@@ -14,6 +14,11 @@ export default function Members() {
   const [role, setRole] = useState('outreach');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // New features state
+  const [editingMember, setEditingMember] = useState(null);
+  const [viewingProfile, setViewingProfile] = useState(null);
+  const [payingMember, setPayingMember] = useState(null);
+
   const isAdmin = sessionStorage.getItem('role') === 'admin';
 
   useEffect(() => {
@@ -22,9 +27,10 @@ export default function Members() {
 
   async function fetchData() {
     try {
+      setLoading(true);
       const [membersRes, payoutsRes] = await Promise.all([
         supabase.from('members').select('*').order('created_at', { ascending: false }),
-        supabase.from('payouts').select('*')
+        supabase.from('payouts').select('*, projects(client_name)')
       ]);
 
       if (membersRes.error) throw membersRes.error;
@@ -54,6 +60,51 @@ export default function Members() {
       alert(`Failed to add member: ${err.message || err.details || JSON.stringify(err)}`);
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleUpdateMember(e) {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.from('members')
+        .update({ name: editingMember.name, role: editingMember.role })
+        .eq('id', editingMember.id);
+      if (error) throw error;
+      setEditingMember(null);
+      fetchData();
+    } catch (err) {
+      console.error("Error updating member:", err);
+      alert(`Failed to update member: ${err.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleApprovePayment(payoutId) {
+    try {
+      const { error } = await supabase.from('payouts')
+        .update({ paid: true, paid_at: new Date().toISOString() })
+        .eq('id', payoutId);
+      if (error) throw error;
+      fetchData();
+    } catch (err) {
+      console.error("Error approving payment:", err);
+      alert("Failed to approve payment");
+    }
+  }
+
+  async function handleApproveAllPayments(memberId) {
+    try {
+      const { error } = await supabase.from('payouts')
+        .update({ paid: true, paid_at: new Date().toISOString() })
+        .eq('member_id', memberId)
+        .eq('paid', false);
+      if (error) throw error;
+      fetchData();
+    } catch (err) {
+      console.error("Error approving all payments:", err);
+      alert("Failed to approve all payments");
     }
   }
 
@@ -168,7 +219,7 @@ export default function Members() {
                     {isAdmin && (
                       <button 
                         className="text-on-surface-variant hover:text-on-surface transition-colors"
-                        onClick={() => alert("Edit member coming soon")}
+                        onClick={() => setEditingMember(member)}
                       >
                         <span className="material-symbols-outlined text-[20px]">more_horiz</span>
                       </button>
@@ -199,14 +250,14 @@ export default function Members() {
                   <div className="mt-5 flex gap-2">
                     <button 
                       className="flex-1 py-2 bg-surface-container-high text-label-sm font-bold rounded hover:bg-surface-variant transition-colors uppercase tracking-wider text-on-surface"
-                      onClick={() => alert("Profile view coming soon")}
+                      onClick={() => setViewingProfile(member)}
                     >
                       View Profile
                     </button>
                     {isAdmin && (
                       <button 
                         className="px-3 py-2 bg-surface-container-high text-primary rounded hover:bg-primary/10 transition-colors"
-                        onClick={() => alert("Payment feature coming soon")}
+                        onClick={() => setPayingMember(member)}
                       >
                         <span className="material-symbols-outlined text-[18px]">payments</span>
                       </button>
@@ -295,16 +346,176 @@ export default function Members() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-primary hover:bg-primary/90 disabled:opacity-50 text-on-primary px-6 py-2.5 rounded-lg font-label-md font-bold transition-colors uppercase tracking-wider flex items-center gap-2"
+                  className="px-6 py-2.5 rounded-lg font-label-md bg-primary text-on-primary font-bold hover:opacity-90 disabled:opacity-50 transition-colors uppercase tracking-wider shadow-lg shadow-primary/20"
                 >
-                  {isSubmitting ? (
-                    <><span className="material-symbols-outlined animate-spin text-[16px]">sync</span> SAVING...</>
-                  ) : (
-                    'SAVE MEMBER'
-                  )}
+                  {isSubmitting ? 'ADDING...' : 'ADD MEMBER'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Member Modal */}
+      {editingMember && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-surface border border-outline-variant rounded-xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in duration-200">
+            <div className="p-6 border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+              <h2 className="text-headline-sm font-bold text-primary">Edit Member</h2>
+              <button onClick={() => setEditingMember(null)} className="text-on-surface-variant hover:text-primary transition-colors p-1 rounded-full hover:bg-surface-container">
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+            <form onSubmit={handleUpdateMember} className="p-6 space-y-5">
+              <div>
+                <label className="block font-label-md text-on-surface-variant mb-2">MEMBER NAME</label>
+                <input
+                  required
+                  type="text"
+                  value={editingMember.name}
+                  onChange={e => setEditingMember({...editingMember, name: e.target.value})}
+                  className="w-full bg-background border border-outline-variant rounded-lg px-4 py-2 text-on-surface focus:ring-1 focus:ring-primary outline-none text-body-md"
+                />
+              </div>
+              <div>
+                <label className="block font-label-md text-on-surface-variant mb-2">PRIMARY ROLE</label>
+                <select
+                  value={editingMember.role}
+                  onChange={e => setEditingMember({...editingMember, role: e.target.value})}
+                  className="w-full bg-background border border-outline-variant rounded-lg px-4 py-2 text-on-surface focus:ring-1 focus:ring-primary outline-none text-body-md"
+                >
+                  <option value="outreach">Outreach</option>
+                  <option value="dev">Dev</option>
+                  <option value="both">Both</option>
+                </select>
+              </div>
+              <div className="pt-6 flex justify-end gap-3 border-t border-outline-variant mt-6">
+                <button type="button" onClick={() => setEditingMember(null)} className="px-6 py-2.5 rounded-lg font-label-md text-on-surface font-bold border border-outline-variant hover:bg-surface-container transition-colors uppercase tracking-wider">CANCEL</button>
+                <button type="submit" disabled={isSubmitting} className="px-6 py-2.5 rounded-lg font-label-md bg-primary text-on-primary font-bold hover:opacity-90 disabled:opacity-50 transition-colors uppercase tracking-wider shadow-lg shadow-primary/20">SAVE</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Profile Modal */}
+      {viewingProfile && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-surface border border-outline-variant rounded-xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in duration-200">
+            <div className="p-6 border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+              <h2 className="text-headline-sm font-bold text-on-surface">Member Profile</h2>
+              <button onClick={() => setViewingProfile(null)} className="text-on-surface-variant hover:text-primary transition-colors p-1 rounded-full hover:bg-surface-container">
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="flex flex-col items-center mb-6">
+                <div className="w-20 h-20 rounded-full border-4 border-outline-variant bg-surface-container-high flex items-center justify-center font-bold text-3xl text-primary uppercase mb-4">
+                  {viewingProfile.name.charAt(0)}
+                </div>
+                <h3 className="text-headline-md font-bold text-on-surface">{viewingProfile.name}</h3>
+                <span className="mt-2 inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-[12px] font-bold uppercase tracking-wider">
+                  {viewingProfile.role}
+                </span>
+              </div>
+              
+              <div className="bg-surface-container-low rounded-lg p-4 space-y-3">
+                <h4 className="font-label-md text-on-surface-variant uppercase tracking-wider border-b border-outline-variant pb-2 mb-3">Lifetime Stats</h4>
+                {(() => {
+                  const stats = getMemberStats(viewingProfile.id);
+                  return (
+                    <>
+                      <div className="flex justify-between items-center text-body-sm"><span className="text-on-surface-variant">Outreach Earned</span><span className="font-bold text-on-surface">{formatCurrency(stats.outreachEarned)}</span></div>
+                      <div className="flex justify-between items-center text-body-sm"><span className="text-on-surface-variant">Dev Earned</span><span className="font-bold text-on-surface">{formatCurrency(stats.devEarned)}</span></div>
+                      <div className="flex justify-between items-center text-body-sm"><span className="text-on-surface-variant">Transport</span><span className="font-bold text-on-surface">{formatCurrency(stats.transportReimbursed)}</span></div>
+                      <div className="flex justify-between items-center text-body-sm border-t border-outline-variant pt-2 mt-2"><span className="text-on-surface-variant font-bold uppercase text-[10px]">Total Pending</span><span className="font-bold text-tertiary">{formatCurrency(stats.pendingAmount)}</span></div>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+            <div className="p-4 border-t border-outline-variant flex justify-center bg-surface-container-lowest">
+              <button onClick={() => setViewingProfile(null)} className="w-full py-2.5 rounded-lg font-label-md text-on-surface font-bold hover:bg-surface-container transition-colors uppercase tracking-wider border border-outline-variant">CLOSE</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Approve Payments Modal */}
+      {payingMember && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-surface border border-outline-variant rounded-xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-outline-variant flex justify-between items-center bg-surface-container-low shrink-0">
+              <div>
+                <h2 className="text-headline-sm font-bold text-on-surface">Approve Payments</h2>
+                <p className="text-body-sm text-on-surface-variant mt-1">Pending payouts for <strong className="text-primary">{payingMember.name}</strong></p>
+              </div>
+              <button onClick={() => setPayingMember(null)} className="text-on-surface-variant hover:text-primary transition-colors p-1 rounded-full hover:bg-surface-container">
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto custom-scrollbar">
+              {(() => {
+                const memberPayouts = payouts.filter(p => p.member_id === payingMember.id && !p.paid);
+                if (memberPayouts.length === 0) {
+                  return (
+                    <div className="text-center py-10">
+                      <span className="material-symbols-outlined text-4xl text-on-surface-variant mb-3">check_circle</span>
+                      <p className="text-body-lg text-on-surface-variant">All payments are cleared for this member!</p>
+                    </div>
+                  );
+                }
+                
+                return (
+                  <div className="space-y-4">
+                    {memberPayouts.map(p => (
+                      <div key={p.id} className="bg-surface-container-low border border-outline-variant rounded-lg p-4 flex justify-between items-center">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-bold text-on-surface">{p.projects?.client_name || 'Unknown Project'}</span>
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-surface-container-highest text-on-surface-variant">
+                              {p.payout_type.replace('_', ' ')}
+                            </span>
+                          </div>
+                          <span className="text-headline-sm font-bold text-primary">{formatCurrency(p.amount)}</span>
+                        </div>
+                        <button 
+                          onClick={() => handleApprovePayment(p.id)}
+                          className="px-4 py-2 bg-surface-container-high hover:bg-primary/10 text-primary font-bold rounded-lg text-label-md uppercase tracking-wider transition-colors border border-outline-variant hover:border-primary/30"
+                        >
+                          Mark Paid
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+            
+            <div className="p-6 border-t border-outline-variant bg-surface-container-low shrink-0 flex justify-between items-center">
+              {(() => {
+                const pendingPayouts = payouts.filter(p => p.member_id === payingMember.id && !p.paid);
+                const totalPending = pendingPayouts.reduce((sum, p) => sum + Number(p.amount), 0);
+                
+                return (
+                  <>
+                    <div>
+                      <span className="block text-label-sm text-on-surface-variant uppercase tracking-wider">Total Pending</span>
+                      <span className="text-headline-md font-bold text-tertiary">{formatCurrency(totalPending)}</span>
+                    </div>
+                    {pendingPayouts.length > 0 && (
+                      <button 
+                        onClick={() => handleApproveAllPayments(payingMember.id)}
+                        className="px-6 py-2.5 bg-primary hover:opacity-90 text-on-primary font-bold rounded-lg text-label-md uppercase tracking-wider transition-colors shadow-lg shadow-primary/20"
+                      >
+                        Approve All
+                      </button>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
           </div>
         </div>
       )}
