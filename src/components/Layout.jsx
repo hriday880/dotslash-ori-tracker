@@ -52,14 +52,14 @@ export default function Layout() {
         <div className="px-6 mt-auto">
           <button
             onClick={handleLogout}
-            className="w-full p-3 bg-surface-container hover:bg-surface-container-high rounded-lg flex items-center gap-3 border border-outline-variant transition-colors text-left"
+            className="w-full p-3 bg-surface-container hover:bg-surface-container-high rounded-lg flex items-center gap-3 border border-outline-variant transition-colors text-left group"
           >
-            <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant">
+            <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant group-hover:text-error transition-colors">
               <LogOut className="w-4 h-4" />
             </div>
             <div className="flex-1 overflow-hidden">
-              <p className="text-body-sm font-bold truncate">Lock Session</p>
-              <p className="text-label-sm text-error truncate">Logout</p>
+              <p className="text-body-sm font-bold truncate capitalize">{sessionStorage.getItem('username') || 'Admin'}</p>
+              <p className="text-label-sm text-on-surface-variant group-hover:text-error transition-colors truncate">Logout Session</p>
             </div>
           </button>
         </div>
