@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import PasswordGate from './components/PasswordGate';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
@@ -10,7 +10,7 @@ import ClubFund from './pages/ClubFund';
 function App() {
   return (
     <PasswordGate>
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
@@ -20,7 +20,7 @@ function App() {
             <Route path="fund" element={<ClubFund />} />
           </Route>
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </PasswordGate>
   );
 }
