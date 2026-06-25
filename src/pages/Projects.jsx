@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import { Plus, Loader2, X, Filter, Search } from 'lucide-react';
-import { formatCurrency, formatDate, calculateSplits } from '../lib/utils';
+import { formatCurrency, formatDate, calculateSplits, calculateOutreachCommissionRate } from '../lib/utils';
 import { Link, useNavigate } from 'react-router-dom';
 
 export default function Projects() {
@@ -24,7 +24,6 @@ export default function Projects() {
   const [dealValue, setDealValue] = useState('');
   const [outreachMemberIds, setOutreachMemberIds] = useState([]); // array of ids
   const [outreachSplits, setOutreachSplits] = useState({}); // { id: percentage }
-  const [outreachCutPct, setOutreachCutPct] = useState(10);
   const [devMemberIds, setDevMemberIds] = useState([]); // array of up to 2 ids
   const [devSplits, setDevSplits] = useState({}); // { id: percentage }
   const [devCutPct, setDevCutPct] = useState(15);
@@ -67,7 +66,8 @@ export default function Projects() {
     return projects.map(project => {
       const outreachShares = projectOutreach.filter(po => po.project_id === project.id).map(po => {
         const member = members.find(m => m.id === po.member_id);
-        return { ...po, memberName: member?.name };
+        const rate = calculateOutreachCommissionRate(po.member_id, project, projects, projectOutreach);
+        return { ...po, memberName: member?.name, rate };
       });
       const devs = projectDevs.filter(pd => pd.project_id === project.id).map(pd => {
         const member = members.find(m => m.id === pd.member_id);
@@ -182,7 +182,6 @@ export default function Projects() {
         client_name: clientName,
         deal_value: dealVal,
         status: 'scouting',
-        outreach_cut_pct: outreachCutPct,
         dev_cut_pct: devCutPct,
         notes: notes
       }]).select().single();
@@ -430,19 +429,6 @@ export default function Projects() {
                   />
                 </div>
                 
-                <div className="col-span-2 sm:col-span-1">
-                  <label className="block font-label-md text-on-surface-variant mb-2">OUTREACH CUT %</label>
-                  <input
-                    required
-                    type="number"
-                    min="1"
-                    max="100"
-                    value={outreachCutPct}
-                    onChange={e => setOutreachCutPct(Number(e.target.value))}
-                    className="w-full bg-background border border-outline-variant rounded-lg px-4 py-2 text-on-surface focus:ring-1 focus:ring-primary outline-none text-body-md"
-                  />
-                </div>
-
                 <div className="col-span-2 sm:col-span-1">
                   <label className="block font-label-md text-on-surface-variant mb-2">DEV CUT %</label>
                   <input

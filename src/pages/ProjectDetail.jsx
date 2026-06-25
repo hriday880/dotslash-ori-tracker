@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { formatCurrency, calculateSplits } from '../lib/utils';
+import { formatCurrency, calculateSplits, calculateOutreachCommissionRate } from '../lib/utils';
 import { Loader2, ArrowLeft, CheckCircle2, AlertTriangle, Edit, X } from 'lucide-react';
 
 const STATUS_FLOW = [
@@ -17,6 +17,8 @@ export default function ProjectDetail() {
   const [projectDevs, setProjectDevs] = useState([]);
   const [projectOutreach, setProjectOutreach] = useState([]);
   const [transportExpenses, setTransportExpenses] = useState([]);
+  const [allProjects, setAllProjects] = useState([]);
+  const [allOutreachShares, setAllOutreachShares] = useState([]);
   const [loading, setLoading] = useState(true);
   
   const [isAdvancing, setIsAdvancing] = useState(false);
@@ -34,12 +36,14 @@ export default function ProjectDetail() {
 
   async function fetchProject() {
     try {
-      const [projRes, memRes, devRes, outRes, transRes] = await Promise.all([
+      const [projRes, memRes, devRes, outRes, transRes, allProjRes, allOutRes] = await Promise.all([
         supabase.from('projects').select('*').eq('id', id).single(),
         supabase.from('members').select('*'),
         supabase.from('project_devs').select('*').eq('project_id', id),
         supabase.from('project_outreach').select('*').eq('project_id', id),
-        supabase.from('transport_expenses').select('*').eq('project_id', id).order('created_at', { ascending: false })
+        supabase.from('transport_expenses').select('*').eq('project_id', id).order('created_at', { ascending: false }),
+        supabase.from('projects').select('*'),
+        supabase.from('project_outreach').select('*')
       ]);
 
       if (projRes.error) throw projRes.error;
@@ -51,6 +55,8 @@ export default function ProjectDetail() {
       setProjectDevs(devRes.data);
       setProjectOutreach(outRes.data || []);
       setTransportExpenses(transRes.data || []);
+      setAllProjects(allProjRes.data || []);
+      setAllOutreachShares(allOutRes.data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -70,7 +76,11 @@ export default function ProjectDetail() {
 
     setIsAdvancing(true);
     try {
-      const { error } = await supabase.from('projects').update({ status: nextStatus }).eq('id', id);
+      const updateData = { status: nextStatus };
+      if (!project.closed_at && ['advance_received', 'in_dev', 'delivered', 'completed'].includes(nextStatus)) {
+        updateData.closed_at = new Date().toISOString();
+      }
+      const { error } = await supabase.from('projects').update(updateData).eq('id', id);
       if (error) throw error;
       fetchProject();
     } catch (err) {
@@ -134,7 +144,8 @@ export default function ProjectDetail() {
     try {
       const outreachShares = projectOutreach.map(po => {
         const m = members.find(m => m.id === po.member_id);
-        return { ...po, memberName: m?.name };
+        const rate = calculateOutreachCommissionRate(po.member_id, project, allProjects, allOutreachShares);
+        return { ...po, memberName: m?.name, rate };
       });
       const devs = projectDevs.map(pd => {
         const m = members.find(m => m.id === pd.member_id);
@@ -247,7 +258,8 @@ export default function ProjectDetail() {
 
   const outreachShares = projectOutreach.map(po => {
     const m = members.find(m => m.id === po.member_id);
-    return { ...po, memberName: m?.name };
+    const rate = calculateOutreachCommissionRate(po.member_id, project, allProjects, allOutreachShares);
+    return { ...po, memberName: m?.name, rate };
   });
   const devs = projectDevs.map(pd => {
     const m = members.find(m => m.id === pd.member_id);
@@ -515,7 +527,7 @@ export default function ProjectDetail() {
                     </div>
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-on-surface-variant font-body-sm text-body-sm">Outreach ({project.outreach_cut_pct || 10}%)</span>
+                        <span className="text-on-surface-variant font-body-sm text-body-sm">Outreach Total</span>
                         <span className="text-error font-body-md text-body-md">- {formatCurrency(splits.outreachCutTotal)}</span>
                       </div>
                       <div className="flex justify-between items-center">
