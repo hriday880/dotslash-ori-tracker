@@ -1,6 +1,6 @@
 import { useState } from 'react';
-
 import { supabase } from '../supabaseClient';
+import logoUrl from '../assets/logo.jpg';
 
 export default function PasswordGate({ children }) {
   const [username, setUsername] = useState('');
@@ -83,8 +83,8 @@ export default function PasswordGate({ children }) {
       >
         {/* App Branding */}
         <div className="flex flex-col items-center mb-10 text-center">
-          <div className="mb-6 w-16 h-16 rounded-2xl bg-white overflow-hidden shadow-lg shadow-white/10">
-            <img src="/logo.jpg" alt="DotSlash Logo" className="w-full h-full object-cover" />
+          <div className="mb-6 w-16 h-16 rounded-2xl bg-white overflow-hidden shadow-lg shadow-white/10 p-2 flex items-center justify-center">
+            <img src={logoUrl} alt="DotSlash Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="font-headline-md text-headline-md text-on-surface mb-1">DotSlash ORI</h1>
           <p className="font-body-sm text-body-sm text-on-surface-variant tracking-wider uppercase">Internal Project Tracker</p>

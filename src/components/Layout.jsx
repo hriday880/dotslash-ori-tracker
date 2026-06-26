@@ -1,5 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { LayoutDashboard, FolderKanban, Users, Wallet, LogOut } from 'lucide-react';
+import { supabase } from '../supabaseClient';
+import logoUrl from '../assets/logo.jpg';
 
 export default function Layout() {
   const handleLogout = () => {
@@ -20,10 +22,10 @@ export default function Layout() {
       <aside className="h-screen w-64 fixed left-0 top-0 flex flex-col py-[var(--spacing-stack-md)] bg-surface border-r border-outline-variant z-50">
         <div className="px-6 mb-8">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center overflow-hidden shadow-md">
-              <img src="/logo.jpg" alt="DotSlash Logo" className="w-full h-full object-cover" />
+            <div className="w-10 h-10 rounded-lg bg-white overflow-hidden shadow-sm shadow-white/10 shrink-0 flex items-center justify-center p-1">
+              <img src={logoUrl} alt="DotSlash Logo" className="w-full h-full object-contain" />
             </div>
-            <div>
+            <div className="flex flex-col">
               <h1 className="text-headline-sm font-bold text-on-surface">DotSlash ORI</h1>
               <p className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">Internal Project Tracker</p>
             </div>
